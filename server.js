@@ -3,9 +3,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const bcrypt = require("bcrypt");
 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON
+app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded data
 app.use(cors()); // Allow frontend to connect
 
 // Connect to MongoDB
@@ -20,9 +22,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Sample user schema
 const UserSchema = new mongoose.Schema({
-    name: String,
-    email: String,
-    password: String
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
 });
 const User = mongoose.model("User", UserSchema);
 
@@ -43,18 +45,23 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html')); // Make sure dashboard.html exists
 });
 
-
-
 // Signup Route
 app.post("/signup", async (req, res) => {
+    console.log("Received Signup Data:", req.body); // Debugging
     const { name, email, password } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ message: "All fields are required" });
+
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: "Email already exists" });
-        const newUser = new User({ name, email, password });
+
+        // Hash the password before saving
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ name, email, password: hashedPassword });
         await newUser.save();
-        // Redirect to dashboard after successful signup
-        res.redirect('/dashboard');
+        
+        // Send a JSON response to redirect the user
+        res.json({ success: true, redirect: "/dashboard" });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }
@@ -64,15 +71,19 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email, password });
+        const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
-        // Redirect to dashboard after successful login
-        res.redirect('/dashboard');
+
+        // Compare the entered password with the hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+        // Send a JSON response to redirect the user
+        res.json({ success: true, redirect: "/dashboard" });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
     }
 });
-
 
 // Start Server
 const PORT = process.env.PORT || 5000;
