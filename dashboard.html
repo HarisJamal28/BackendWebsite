@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to Your Dashboard</h1>
+    <div>
+        <h2>Your Profile</h2>
+        <p>Name: <span id="user-name"></span></p>
+        <p>Email: <span id="user-email"></span></p>
+    </div>
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        // This is where you'd normally populate data from the server
+        // For now, we'll just use dummy data.
+        document.getElementById("user-name").innerText = "John Doe"; // Example name
+        document.getElementById("user-email").innerText = "john.doe@example.com"; // Example email
+
+        // Logout function
+        function logout() {
+            // Clear any user session or token here
+            window.location.href = '/'; // Redirect back to login page
+        }
+    </script>
+</body>
+</html>
