@@ -51,7 +51,6 @@ app.post("/signup", async (req, res) => {
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: "Email already exists" });
-
         const newUser = new User({ name, email, password });
         await newUser.save();
         // Redirect to dashboard after successful signup
@@ -67,7 +66,6 @@ app.post("/login", async (req, res) => {
     try {
         const user = await User.findOne({ email, password });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
-
         // Redirect to dashboard after successful login
         res.redirect('/dashboard');
     } catch (error) {
